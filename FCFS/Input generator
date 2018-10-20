@@ -1,0 +1,32 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+
+int main(){
+
+	int no_of_set = 100;
+
+	srand(time(0));
+
+	for(int i=1; i<no_of_set+1; i++){
+		char file_name[] = "ip_files/inputXX.txt";                                   //input file names in the format 'input01'
+		file_name[14] = i/10+'0';
+		file_name[15] = i%10+'0';
+		FILE *file = fopen(file_name, "w+");
+		int no_of_process = 2 + (rand()%30);		                           //no of process are randomly chosen from 5 to 9.
+		fprintf(file, "n=%d\n", no_of_process);
+		
+		for(int j=0; j<no_of_process; j++){
+			char name[] = "PX";
+			name[1] = 65+j;					                   //name of process.
+			int arival_time = rand()%50;		                           //arival time of process, randomly chosen from 0 to 19.
+			int cpu_bust_length = 1+(rand()%90);	                           //next cpu bust of process, randomly chosen from 0 to 19.
+			char temp[14];
+			fprintf(file,"%s\t%d\t%d\n",name,arival_time,cpu_bust_length);	   // output the process name, arival time, next cpu bust time.
+		}
+
+		fclose(file);
+	}
+
+	return 0;
+}
