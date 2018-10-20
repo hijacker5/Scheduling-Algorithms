@@ -1,0 +1,136 @@
+#include<stdio.h>
+#include<time.h>
+#include<stdlib.h>
+#include<string.h>
+
+struct PCB{
+	char name[2];
+	int arival_time,cpu_burst_time,waiting_time;
+	struct PCB *next;
+};
+
+struct PCB *create_PCBs_list(char file_name[21]){
+
+	FILE *file=fopen(file_name,"r");
+	char pname[2]="XX";
+	int no_of_process;
+	char temp;
+	fscanf(file,"%c=%d",&temp,&no_of_process);
+
+	struct PCB *head=malloc(sizeof(struct PCB));
+	struct PCB *now=head;
+
+	for(int i=0; i<no_of_process; i++){
+		char name[2];
+		int arival_time;
+		int cpu_burst_time;
+		fscanf(file,"%s\t%d\t%d",name,&arival_time,&cpu_burst_time);
+		strcpy(now->name,name);
+		now->arival_time=arival_time;
+		now->cpu_burst_time=cpu_burst_time;
+
+		if(i==no_of_process-1){
+			now->next=NULL;
+		}
+		else{
+			now->next=malloc(sizeof(struct PCB));
+			now=now->next;
+		}
+	}
+	fclose(file);
+	return head;
+}
+
+void sort_list(struct PCB **head){
+
+	struct PCB *temp1,*temp2;
+
+	for(temp1=head;temp2!=NULL||temp1!=NULL;temp1=temp1->next){
+		for(temp2=temp1; temp2!=NULL; temp2=temp2->next){
+    		if(temp1->arival_time>temp2->arival_time){
+    			char name[2];
+    			int t1,t2;
+    			strcpy(name,temp1->name);
+    			t1=temp1->arival_time;
+    			t2=temp1->cpu_burst_time;
+    			strcpy(temp1->name,temp2->name);
+    			temp1->arival_time=temp2->arival_time;
+    			temp1->cpu_burst_time=temp2->cpu_burst_time;
+    			strcpy(temp2->name,name);
+    			temp2->arival_time=t1;
+    			temp2->cpu_burst_time=t2;
+    		}
+    	}
+    }
+    return;
+}
+
+void process_PCBs(struct PCB **head){
+
+	int time,c=0;
+	float waiting_time,cpu_burst_length;
+
+	struct PCB *now;
+
+	for(now=head;now!=NULL;now=now->next){
+
+        if(now==head){
+        	time=now->arival_time;
+        	cpu_burst_length=now->cpu_burst_time;
+        	waiting_time=0;
+        	now->waiting_time=0;
+        }
+        else{
+        	cpu_burst_length=cpu_burst_length+now->cpu_burst_time;
+        	int wt;
+
+        	if(time<(now->arival_time)){
+        		wt=0;
+        	}
+        	else{
+        		wt=time-(now->arival_time);
+        	}
+        	waiting_time=waiting_time+wt;
+        	now->waiting_time=wt;
+        	time=time+now->cpu_burst_time;
+        }
+        c++;
+    }
+    float waiting_time_avg=waiting_time/c;
+    float cpu_burst_length_avg=cpu_burst_length/c;
+    float sum1=0;
+    float sum2=0;
+    int max=0;
+    int min=100000;
+
+	for(now=head;now!=NULL;now=now->next){
+		if(max<(now->waiting_time)){
+			max=now->waiting_time;
+		}
+		if(min>(now->waiting_time)){
+			min=now->waiting_time;
+		}
+    	sum1=sum1+((now->waiting_time)-waiting_time_avg)*((now->waiting_time)-waiting_time_avg);
+    	sum2=sum2+((now->cpu_burst_time)-cpu_burst_length_avg)*((now->cpu_burst_time)-cpu_burst_length_avg);
+    }
+    FILE *file1=fopen("output.txt","a+");
+
+    fprintf(file1,"%f\t%f\t%f\t%d\t%d\n",sum2/c,sum1/c,waiting_time_avg,max,min);	//output format <varance in cpu burst length> <variance in waiting time> <avrage waiting time>  <max waiting time>  <min waiting time>
+    fclose(file1);
+    return;
+}
+
+int main(){
+	int no_of_set=100;
+	for(int i=1;i<no_of_set+1;i++){
+
+		char file_name[] = "ip_files/inputXX.txt";
+		file_name[14] = i/10+'0';
+		file_name[15] = i%10+'0';
+		struct PCB *head = create_PCBs_list(file_name);
+
+		sort_list(head);
+		process_PCBs(head);
+	}
+	return 0;
+}
